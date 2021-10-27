@@ -10,16 +10,6 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-const authPayLoad = {
-    "command":"login",
-    "login":"norches",
-    "password":"masterkey123",
-}
-
-const helloPayload = {
-    command: 'hello'
-}
-
 let sessionId;
 let sessionUuid;
 let currentUser;
@@ -93,7 +83,7 @@ client.connect(port, host, () => {
 const authRegex = /\/(?:auth)\s([a-zA-Z0-9]+)\s([a-zA-Z0-9]+)/
 const sendRegex = /\/(?:send)\s(.*)/
 
-rl.write('Enter command: \n');
+rl.write('Введите команду (/help выводит список всех команд): \n');
 rl.prompt();
 rl.on('line', (input) => {
     if (input === '/help') {
@@ -111,7 +101,6 @@ rl.on('line', (input) => {
         const argPassword = match[2];
 
         if (!sessionUuid) {
-            console.log(argPassword, argLogin)
             client.write(JSON.stringify({
                 id: sessionId,
                 command: 'login',

@@ -19,6 +19,10 @@ let messagesCounter = 0;
 
 let history = [];
 
+const findSessionIndexByKey = (session_key) => {
+    return sessions.findIndex(el => el.session_key === session_key)
+}
+
 server.on('connection', (sock) => {
     console.log('CONNECTED: ' + sock.remoteAddress + ':' + sock.remotePort);
     sessionCounter += 1;
@@ -26,7 +30,7 @@ server.on('connection', (sock) => {
     sockets.push(sock);
 
     //sending over an ID
-    sock.write(JSON.stringify({ id: sessionCounter, command: 'hello' }))
+    sock.write(JSON.stringify({ id: sessionCounter, command: 'hello', auth_method: 'plain-text' }))
 
     sock.on('data', (data) => {
         const jsonData = JSON.parse(data);
@@ -36,11 +40,8 @@ server.on('connection', (sock) => {
         }
 
         const publishMessage = (message) => {
-            console.log('ob to be published', message);
             sockets.forEach((sock, index, array) => {
-                console.log(sock.id);
-                const _sender = users.find(el => el.id === message.sender_id)
-                console.log(_sender);
+                const _sender = users.find(el => el.id === message.sender_id);
                 response = {
                     id: sock.id,
                     command: 'message',
@@ -49,7 +50,7 @@ server.on('connection', (sock) => {
                     sender_name: _sender.name,
                     session: sessions.find(el => el.session_id === sock.id)?.session_key           
                 }
-                sock.write(JSON.stringify(response));
+                sock.write(JSON.stringify(response))
             });
         }
 
@@ -95,7 +96,6 @@ server.on('connection', (sock) => {
                     message: 'Не найден пользователь'
                 }
             }
-            sock.write(JSON.stringify(response))
         }
         if (jsonData.command === 'message') {
             response = {
@@ -103,7 +103,7 @@ server.on('connection', (sock) => {
                 id: jsonData.id,
                 command: 'message_reply'
             }
-            if (sessions.findIndex(el => el.session_key === jsonData.session) !== -1) {
+            if (findSessionIndexByKey(jsonData.session) !== -1) {
                 messagesCounter += 1;
                 const session = sessions.find(el => el.session_key === jsonData.session)
                 const user = users.find(el => el.id === session.user_id);
@@ -120,27 +120,29 @@ server.on('connection', (sock) => {
                 }
                 history.push(_message);
                 publishMessage(_message);
+                return
             } else {
                 response = {
                     ...response,
                     status: 'failed',
                     message: 'Вы не авторизованы, чтобы отправлять сообщения сначала авторизируйтесь'
                 }
-                sock.write(JSON.stringify(response))
             }
         }
         if (jsonData.command === 'logout') {
-            const sessionIndex = sessions.findIndex(el => el.session_key === jsonData.session)
+            const sessionIndex = findSessionIndexByKey(jsonData.session)
             if (sessionIndex !== -1) {
                 sessions.splice(sessionIndex, 1)
                 response = {
                     ...response,
+                    id: jsonData.id,
                     command: 'logout_reply',
                     status: 'ok'
                 }
             } else {
                 response = {
                     ...response,
+                    id: jsonData.id,
                     command: 'logout_reply',
                     status: 'failed',
                     message: 'Вы не авторизированы!'
@@ -149,7 +151,7 @@ server.on('connection', (sock) => {
         }
 
         if (jsonData.command === 'ping') {
-            const sessionIndex = sessions.findIndex(el => el.session_key === jsonData.session)
+            const sessionIndex = findSessionIndexByKey(jsonData.session)
             if (sessionIndex !== -1) {
                 sessions.splice(sessionIndex, 1)
                 response = {
@@ -166,6 +168,7 @@ server.on('connection', (sock) => {
                 }
             }
         }
+        if (response) sock.write(JSON.stringify(response));
     });
     // Add a 'close' event handler to this instance of socket
     sock.on('close', (data) => {
