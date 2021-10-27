@@ -1,0 +1,19 @@
+{
+  "name": "gologin-test",
+  "version": "1.0.0",
+  "description": "Чат. Клиент серверное приложение. Сервер принимает запросы от клиентов, пересылает их всем участникам. Клиенты могут получать и отправлять сообщения. Предусмотрена авторизация. Для реализации передачи по сети используются сокеты (без фреймворков)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/norches/gologin-test.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/norches/gologin-test/issues"
+  },
+  "homepage": "https://github.com/norches/gologin-test#readme"
+}
